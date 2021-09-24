@@ -1,0 +1,27 @@
+name: Docker Image CI 
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: pgagent-dd
+
+jobs:
+ build:
+  runs-on: ubuntu-latest
+  steps: 
+  - name: Generate build number
+    uses: einaregilsson/build-number@v3
+    with:
+       token: ${{secrets.github_token}}        
+  - name: Print new build number
+    run: echo "Build number is $BUILD_NUMBER"
+  - uses: actions/checkout@v2
+  - name: Build the Docker image
+    run: docker build . --tag ghcr.io/digdes/$IMAGE_NAME:$BUILD_NUMBER
+  - name: Log into GitHub Container Registry
+    run: echo ${{ secrets.GITHUB_TOKEN }} | docker login -u DigDes --password-stdin ghcr.io
+  - name: Push image to GitHub Container Registry
+    run: docker push ghcr.io/digdes/$IMAGE_NAME:$BUILD_NUMBER
